@@ -1,28 +1,365 @@
 @import "tailwindcss";
 
+/* Tailwind v4 theme configuration moved to tailwind.config.js to resolve IDE warnings */
+
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --canvas-light: #F1F2F6;
+  --panel-white: #FFFFFF;
+  --sidebar-lavender: #F1F1FE;
+  --primary-purple: #7C3AED;
+  --accent-soft: #EDE9FE;
+  --text-primary: #1A1A2E;
+  --text-secondary: #64748B;
+  --crimson-alert: #FF3B30;
+  --safe-green: #34C759;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  background-color: var(--canvas-light);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
+/* Tactical Map Enhancements (Maintained Dark) */
+.tactical-tiles {
+  /* Keeping map dark per user preference, but removing filters that affect overall app light mode */
+  filter: none;
+}
+
+.surveillance-zone-pulse {
+  animation: zone-pulse 4s infinite ease-in-out;
+}
+
+@keyframes zone-pulse {
+  0% { stroke-opacity: 0.3; stroke-width: 2; }
+  50% { stroke-opacity: 0.7; stroke-width: 4; }
+  100% { stroke-opacity: 0.3; stroke-width: 2; }
+}
+
+.nfz-warning {
+  animation: nfz-flash 2s infinite steps(2);
+}
+
+@keyframes nfz-flash {
+  0% { fill-opacity: 0.3; }
+  50% { fill-opacity: 0.5; }
+}
+
+.threat-pulse-strong {
+  animation: threat-ping-strong 1s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: rgba(239, 68, 68, 0.8) !important;
+  box-shadow: 0 0 20px #ef4444;
+}
+
+@keyframes threat-ping-strong {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+
+.glass-panel {
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(64px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+}
+
+.hud-pill {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(15, 23, 42, 0.4);
+  display: inline-flex;
+  align-items: center;
+}
+
+.hud-badge-cyan {
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #22d3ee;
+  background-color: rgba(6, 182, 212, 0.05);
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.1);
+}
+
+.tactical-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+.hud-glow-cyan {
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.15), inset 0 0 10px rgba(34, 211, 238, 0.05);
+}
+
+/* Monospace for data values only */
+.tabular-nums {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.01);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.2);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 211, 238, 0.4);
+}
+
+/* Gauge Animation */
+.gauge-path {
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes scan {
+  from { top: 0; }
+  to { top: 100%; }
+}
+
+.digital-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.tactical-scanline {
+  background: linear-gradient(to bottom, transparent, rgba(0, 229, 255, 0.1) 50%, transparent);
+  height: 20px;
   width: 100%;
+  position: absolute;
+  left: 0;
+  animation: scan-vertical 3s linear infinite;
+  z-index: 5;
+  pointer-events: none;
+}
+
+@keyframes scan-vertical {
+  from { top: -20px; }
+  to { top: 100%; }
+}
+
+
+@keyframes scan-translate {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(100vh); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s infinite;
+}
+
+/* Leaflet Tactical Refinements */
+.leaflet-container {
+  background: #020617 !important;
+}
+
+.leaflet-tile-pane {
+  opacity: 1.0;
+}
+
+.tactical-tiles {
+  /* Removed grayscale/invert filters to restore terrain visibility per BRINC LiveOps style */
+  filter: none;
+}
+
+.neon-path {
+  filter: drop-shadow(0px 0px 8px #00e5ff);
+  animation: dash-move 30s linear infinite;
+}
+
+/* Removed redundant threat-pulse-strong definition */
+
+.glow-line {
+  filter: drop-shadow(0 0 5px #22d3ee) drop-shadow(0 0 10px #22d3ee);
+  stroke-dasharray: 8, 12;
+  animation: dash-move 20s linear infinite;
+}
+
+@keyframes dash-move {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+.tactical-popup .leaflet-popup-content-wrapper {
+  background: rgba(15, 23, 42, 0.95) !important;
+  color: white !important;
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+}
+
+.tactical-popup .leaflet-popup-tip {
+  background: rgba(15, 23, 42, 0.95) !important;
+}
+
+.custom-tactical-icon {
+  background: none !important;
+  border: none !important;
+}
+
+/* Threat Pulse for Anomalies */
+@keyframes threat-ping {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+
+.threat-pulse {
+  animation: threat-ping 1.5s ease-out infinite;
+  background-color: rgba(244, 63, 94, 0.6) !important;
+}
+
+/* Tactical Data Labels (Permanent Tooltips) */
+.leaflet-tooltip.tactical-tooltip {
+  background: #0f172a !important;
+  border: 1px solid #06b6d4 !important;
+  color: #06b6d4 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  padding: 4px 10px !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+}
+
+/* Remove Leaflet Tooltip Pointers/Arrows */
+.leaflet-tooltip-left.tactical-tooltip::before,
+.leaflet-tooltip-right.tactical-tooltip::before,
+.leaflet-tooltip-top.tactical-tooltip::before,
+.leaflet-tooltip-bottom.tactical-tooltip::before {
+  display: none !important;
+  border: none !important;
+}
+
+.geofence-circle {
+  transition: all 1s ease-in-out;
+  stroke: rgba(34, 211, 238, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════════ */
+/* SOS PULSE MARKER — Concentric Red Rings    */
+/* ═══════════════════════════════════════════ */
+
+@keyframes sos-ping {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes sos-ping-slow {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(5);
+    opacity: 0;
+  }
+}
+
+@keyframes sos-core-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.9), 0 0 50px rgba(239, 68, 68, 0.4);
+    transform: scale(1.15);
+  }
+}
+
+.sos-pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  margin-left: -20px;
+  border-radius: 50%;
+  border: 2px solid rgba(239, 68, 68, 0.8);
+  background: rgba(239, 68, 68, 0.15);
+  animation: sos-ping 1.5s ease-out infinite;
+  pointer-events: none;
+}
+
+.sos-pulse-ring-2 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  margin-left: -20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 100, 100, 0.6);
+  background: transparent;
+  animation: sos-ping-slow 2s ease-out infinite 0.5s;
+  pointer-events: none;
+}
+
+.sos-core {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff4444, #cc0000);
+  border: 2px solid #ff6666;
+  animation: sos-core-pulse 1s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+}
+
+.sos-label {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* Intel Brief severity bar fill animation */
+@keyframes severity-fill {
+  from { width: 0%; }
+}
+
+.severity-bar-fill {
+  animation: severity-fill 1s ease-out forwards;
+}
+
+/* Leaflet popup override for SOS markers */
+.custom-pop-red .leaflet-popup-content-wrapper {
+  background: rgba(30, 10, 10, 0.95) !important;
+  border: 1px solid rgba(239, 68, 68, 0.5) !important;
 }
