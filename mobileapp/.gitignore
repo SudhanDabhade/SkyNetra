@@ -1,0 +1,48 @@
+# Git Ignore for Drone Response App
+
+# Firebase Service Account (CRITICAL: Do not upload credentials!)
+serviceAccountKey.json
+*.json
+
+# Flutter and Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+ios/.generated/
+android/.gradle/
+android/local.properties
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+# Ignore Environment Variables
+.env
+
+# Ignore Firebase Keys
+serviceAccountKey.json
+
+# Ignore Mac hidden files and Python caches
+.DS_Store
+__pycache__/
+# Ignore Backend Keys
+.env
+serviceAccountKey.json
+
+# Ignore Frontend Keys
+config.js
+
+# Ignore Mac hidden files
+.DS_Store
+__pycache__/

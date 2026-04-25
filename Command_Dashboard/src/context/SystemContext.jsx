@@ -29,9 +29,9 @@ export const SystemProvider = ({ children }) => {
   });
   const [alertLog, setAlertLog] = useState([]);
   const [fleetStatus, setFleetStatus] = useState([
-    { id: 'ACTIVE', status: 'Active', count: 5, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-    { id: 'CHARGING', status: 'Charging', count: 4, color: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
-    { id: 'STANDBY', status: 'Ready', count: 3, color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' }
+    { id: 'ACTIVE', status: 'Active', count: 2, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+    { id: 'CHARGING', status: 'Charging', count: 3, color: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
+    { id: 'STANDBY', status: 'Ready', count: 4, color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' }
   ]);
   const [telemetry, setTelemetry] = useState({
     cpuLoad: 0,
@@ -183,6 +183,7 @@ export const SystemProvider = ({ children }) => {
       });
 
       // ── 5. Real-Time Fleet Telemetry Sync ──
+      /*
       socket.on('fleet_update', (data) => {
         setFleetStatus([
           { id: 'ACTIVE', status: 'Active', count: data.active, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
@@ -190,6 +191,7 @@ export const SystemProvider = ({ children }) => {
           { id: 'STANDBY', status: 'Ready', count: data.ready, color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' }
         ]);
       });
+      */
 
       return () => {
         socket.off('connect');
@@ -199,7 +201,7 @@ export const SystemProvider = ({ children }) => {
         socket.off('ui_pulse_location');
         socket.off('trigger_deploy_prompt');
         socket.off('update_intel_brief');
-        socket.off('fleet_update');
+        // socket.off('fleet_update');
       };
     }
   }, [socket]);

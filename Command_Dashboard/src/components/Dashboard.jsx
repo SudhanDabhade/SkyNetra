@@ -1,7 +1,7 @@
 import React from 'react';
 import { toast } from 'react-hot-toast';
 import {
-  Video, Grid, Crosshair, Users, Layers, MoreHorizontal,
+  Video, Grid, Crosshair, Users, MoreHorizontal,
   ChevronDown, Phone, Shield, Radio, Signal, Battery, Navigation, Plus, Camera, FileText
 } from 'lucide-react';
 import { useSystemState } from '../context/SystemContext';
@@ -256,8 +256,6 @@ const Dashboard = () => {
             <Camera className="w-6 h-6 transition-colors group-hover:text-[#7C3AED]" />
           </div>
 
-          <SidebarIcon icon={Users} active={activeView === 'team'} onClick={() => setActiveView('team')} />
-          <SidebarIcon icon={Layers} active={activeView === 'layers'} onClick={() => setActiveView('layers')} />
           <SidebarIcon icon={FileText} active={activeView === 'logs'} onClick={() => setActiveView('logs')} />
         </nav>
 
@@ -325,12 +323,6 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Placeholder for other views */}
-          {(activeView === 'team' || activeView === 'layers') && (
-            <div className="flex items-center justify-center h-full bg-zinc-900/50">
-              <h1 className="text-zinc-500 font-black text-4xl uppercase tracking-widest">{activeView} View</h1>
-            </div>
-          )}
 
           {/* Deploy Modal — handles both manual and SOS-triggered deployments */}
           <DeployModal

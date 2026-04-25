@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkyNetra - Autonomous Urban Safety</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+    <style>
+        /* 1. VARIABLES & GLOBAL RESET */
+        :root {
+            --bg-dark: #121212;
+            --card-bg: linear-gradient(145deg, #232526, #1a1a1a);
+            --sos-red: radial-gradient(circle, #ff3d3d 0%, #b30000 100%);
+            --accent-green: #4ade80;
+            --text-gray: #a0a0a0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: white;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        /* 2. LAYOUT CONTAINERS */
+        .app-container {
+            width: 100%;
+            max-width: 414px;
+            background: #1a1a1a;
+            border-radius: 40px;
+            position: relative;
+            /* Crucial for bottom-nav absolute positioning */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 8px solid #2a2a2a;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            min-height: 700px;
+            /* Ensures a consistent phone-like shape */
+        }
+
+        .view {
+            padding: 25px;
+            padding-bottom: 100px;
+            /* Extra room so nav doesn't cover content */
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 3. ANIMATIONS */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse-green {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(74, 222, 128, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+            }
+        }
+
+        .pulse-circle {
+            width: 15px;
+            height: 15px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            box-shadow: 0 0 0 rgba(74, 222, 128, 0.4);
+            animation: pulse-green 2s infinite;
+        }
+
+        /* 4. DASHBOARD COMPONENTS */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .greeting {
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .location {
+            font-size: 12px;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* SOS Button */
+        .sos-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 15px 0;
+            gap: 15px;
+        }
+
+        .sos-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: var(--sos-red);
+            border: 6px solid #222;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .sos-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.6);
+        }
+
+        .sos-text {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        /* Incident Grid & Cards */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .card:active {
+            background: #333;
+            border-color: var(--accent-green);
+            transform: scale(0.97);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .card-sub {
+            font-size: 10px;
+            color: var(--text-gray);
+            letter-spacing: 0.5px;
+        }
+
+        /* 5. PNG ICON & IMAGE FILTERS */
+        .card-icon {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+            /* Makes black PNGs white */
+        }
+
+        .btn-icon {
+            width: 18px;
+            height: 18px;
+            filter: brightness(0) invert(1);
+            margin-right: 10px;
+        }
+
+        .nav-icon-img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            filter: brightness(0) invert(0.6);
+            /* Gray for inactive state */
+            transition: 0.3s;
+        }
+
+        .nav-item.active .nav-icon-img {
+            /* Filter to match --accent-green (#4ade80) */
+            filter: invert(72%) sepia(87%) saturate(321%) hue-rotate(85deg) brightness(97%) contrast(92%);
+        }
+
+        /* 6. INPUTS & BUTTONS */
+        input,
+        textarea {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+        }
+
+        .option-chip {
+            background: #222;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            cursor: pointer;
+        }
+
+        .option-chip.selected {
+            border-color: var(--accent-green);
+            background: #1a3326;
+        }
+
+        .btn-action {
+            background: linear-gradient(to right, #d32f2f, #9a0007);
+            border: none;
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .btn-action:active {
+            transform: scale(0.98);
+        }
+
+        #ai-status {
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 15px;
+            color: #ffb74d;
+        }
+
+        /* 7. BOTTOM NAVIGATION */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            padding: 12px 0 25px 0;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: #888;
+            cursor: pointer;
+            transition: 0.3s;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--accent-green);
+        }
+
+        .nav-item.active .nav-label {
+            color: var(--accent-green);
+        }
+
+        .nav-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item:active .nav-icon-img {
+            transform: scale(0.9);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <div id="view-signin" class="view hidden">
+            <h2 style="margin-top: 40px">👤 User Login</h2>
+            <p style="color: #888">
+                Enter details to enable identity tracking for emergency triggers.
+            </p>
+            <input type="text" id="user-name" placeholder="Full Name" style="margin-top: 20px" />
+            <input type="tel" id="user-phone" placeholder="Phone Number" />
+            <button class="btn-action" onclick="handleSignIn()">
+                ACCESS DASHBOARD
+            </button>
+        </div>
+
+        <div id="view-dashboard" class="view">
+            <div class="header">
+                <div class="greeting" id="welcome-msg">Welcome, User</div>
+                <div>☰</div>
+            </div>
+            <div class="location">
+                <span id="location-text">📍 LOCATING... • </span>
+                <span style="color: var(--accent-green)">LIVE LOCATION ACTIVE</span>
+            </div>
+
+            <div class="sos-container">
+                <div class="sos-btn" onclick="quickTrigger()">
+                    <span class="sos-text">SOS</span>
+                </div>
+                <p style="font-size: 12px; color: #888; text-align: center">
+                    <b>TAP ONCE</b> to capture GPS<br />& notify command center
+                </p>
+            </div>
+
+            <div class="grid">
+                <div class="card" onclick="selectType('Road Accident')">
+                    <div class="card-title">
+                        <img src="ambulance.png" class="card-icon" alt="Accident"> ROAD ACCIDENT
+                    </div>
+                    <div class="card-sub">VEHICLE EMERGENCY</div>
+                </div>
+
+                <div class="card" onclick="selectType('Medical')">
+                    <div class="card-title">
+                        <img src="heart-plus.png" class="card-icon" alt="Medical"> MEDICAL
+                    </div>
+                    <div class="card-sub">MEDICAL COLLAPSE</div>
+                </div>
+
+                <div class="card" onclick="selectType('Crime')">
+                    <div class="card-title">
+                        <img src="siren.png" class="card-icon" alt="Crime"> CRIME
+                    </div>
+                    <div class="card-sub">SECURITY THREAT</div>
+                </div>
+
+                <div class="card" onclick="selectType('Fire')">
+                    <div class="card-title">
+                        <img src="flame.png" class="card-icon" alt="Fire"> FIRE
+                    </div>
+                    <div class="card-sub">LIVE SMOKE ANALYSIS</div>
+                </div>
+            </div>
+
+            <button class="btn-action" style="margin-top: auto" onclick="alert('Calling 112...')">
+                <img src="phone.png" class="btn-icon" alt="Call"> CALL 112 NOW
+            </button>
+        </div>
+        <div id="view-details" class="view hidden">
+            <h3 id="details-header">Incident Details</h3>
+            <div id="options-box" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div>
+            <textarea id="manual-input" placeholder="Describe other details manually..." rows="4"></textarea>
+            <button class="btn-action" style="margin-top: 20px;" onclick="generateTrigger()">GENERATE TRIGGER
+                🚨</button>
+            <button style="background: none; border: none; color: #888; cursor: pointer; margin-top: 15px;"
+                onclick="showView('dashboard')">BACK</button>
+        </div>
+        <div id="view-awareness" class="view hidden">
+            <div
+                style="border: 2px dashed var(--accent-green); padding: 30px; border-radius: 20px; text-align: center; background: #1a1a1a;">
+                <h2 style="color: var(--accent-green)">SOS ACTIVE</h2>
+                <p id="dispatch-info" style="margin: 15px 0; color: #ccc">Drone dispatched to coordinates.</p>
+                <hr style="border: 0.5px solid #333; margin: 20px 0" />
+                <p style="font-weight: bold; margin-bottom: 15px;">Add Evidence to Priority Queue</p>
+                <input type="file" id="media-upload" accept="image/*,video/*" style="display: none" />
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-action" style="flex: 1" onclick="alert('Camera Active')">📷 LIVE</button>
+                    <button class="btn-action" style="flex: 1; background: #333"
+                        onclick="document.getElementById('media-upload').click()">📁 UPLOAD</button>
+                </div>
+                <div id="ai-status"></div>
+
+                <div id="ai-progress-container"
+                    style="display: none; height: 6px; background: #333; margin-top: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #444;">
+                    <div id="ai-progress-fill"
+                        style="height: 100%; width: 0%; background: var(--accent-green); transition: width 0.1s linear;">
+                    </div>
+                </div>
+                <button class="btn-action" style="margin-top: 25px; width: 100%; background: #222;"
+                    onclick="showView('status')">VIEW STATUS OF DRONE</button>
+            </div>
+        </div>
+        <div id="view-status" class="view hidden">
+            <h2 style="margin-top: 20px;">Drone Tracking</h2>
+            <div
+                style="background: #222; padding: 25px; border-radius: 20px; border: 1px solid #333; margin-top: 10px;">
+                <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                    <div class="pulse-circle"></div>
+                    <span id="status-label"
+                        style="color: var(--accent-green); font-weight: bold; letter-spacing: 1px;">EN ROUTE</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <p style="color: #888; font-size: 12px; text-transform: uppercase;">Drone Assigned</p>
+                        <h3 id="status-drone-id" style="color: white;">---</h3>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <div>
+                            <p style="color: #888; font-size: 12px; text-transform: uppercase;">Distance</p>
+                            <h3 id="status-distance" style="color: white;">---</h3>
+                        </div>
+                        <div>
+                            <p style="color: #888; font-size: 12px; text-transform: uppercase;">ETA</p>
+                            <h3 id="status-eta" style="color: var(--accent-green);">---</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-action" style="margin-top: auto;" onclick="window.resetAndBack()">END SESSION &
+                RESET</button>
+        </div>
+        <div id="view-reports" class="view hidden">
+            <h2>📋 My Reports</h2>
+            <p style="color:#888">No previous incidents logged in this session.</p>
+        </div>
+
+        <div id="view-profile" class="view hidden">
+            <h2>👤 User Profile</h2>
+            <div style="background:#222; padding:20px; border-radius:15px; margin-top:20px;">
+                <p id="profile-name" style="font-size:18px; font-weight:bold;">---</p>
+                <p id="profile-phone" style="color:#888;">---</p>
+            </div>
+        </div>
+
+        <div id="view-settings" class="view hidden">
+            <h2>⚙️ Settings</h2>
+            <div style="display:flex; flex-direction:column; gap:15px; margin-top:20px;">
+                <button class="btn-action" style="background:#333"
+                    onclick="localStorage.clear(); location.reload();">LOGOUT & WIPE DATA</button>
+            </div>
+        </div>
+        <nav class="bottom-nav" id="global-nav">
+            <div class="nav-item active" onclick="navTo('dashboard', this)">
+                <img src="house.png" class="nav-icon-img" alt="Home">
+                <span class="nav-label">Home</span>
+            </div>
+            <div class="nav-item" onclick="navTo('reports', this)">
+                <img src="proportions.png" class="nav-icon-img" alt="Reports">
+                <span class="nav-label">Reports</span>
+            </div>
+            <div class="nav-item" onclick="navTo('profile', this)">
+                <img src="user-round-pen.png" class="nav-icon-img" alt="Profile">
+                <span class="nav-label">Profile</span>
+            </div>
+            <div class="nav-item" onclick="navTo('settings', this)">
+                <img src="settings.png" class="nav-icon-img" alt="Settings">
+                <span class="nav-label">Settings</span>
+            </div>
+        </nav>
+        <script src="config.js"></script>
+
+        <script type="module">
+            import { GoogleGenerativeAI } from "@google/generative-ai";
+
+            // --- 1. CONFIGURATION & CONSTANTS ---
+            const API_KEY = window.APP_CONFIG.GEMINI_API_KEY;
+            // Adapting to use BACKEND_IP from mobileapp/config.js on port 5001
+            const SERVER_URL = `http://${window.APP_CONFIG.BACKEND_IP}:5001`;
+            const genAI = new GoogleGenerativeAI(API_KEY);
+
+            const VIEWS = ["signin", "dashboard", "details", "awareness", "status", "reports", "profile", "settings"];
+            const CATEGORIES = {
+                "Road Accident": ["Multiple vehicles", "Pedestrian hit", "Fuel leak", "Traffic blockage"],
+                "Medical": ["Unconscious person", "Difficulty breathing", "Severe bleeding", "Cardiac symptoms"],
+                "Crime": ["Armed individual", "Physical altercation", "Vandalism", "Theft in progress"],
+                "Fire": ["Structural fire", "Electrical fire", "Gas Leak/Explosion", "Smoke only"],
+            };
+
+            let selectedIncident = "";
+
+            // --- 2. UNIFIED VIEW MANAGEMENT ---
+            window.showView = (id) => {
+                // Hide all views
+                VIEWS.forEach((v) => {
+                    const el = document.getElementById(`view-${v}`);
+                    if (el) el.classList.add("hidden");
+                });
+
+                // Show target view
+                const target = document.getElementById(`view-${id}`);
+                if (target) target.classList.remove("hidden");
+
+                // Handle Bottom Navigation Visibility
+                const nav = document.getElementById('global-nav');
+                const emergencyViews = ["awareness", "status", "signin", "details"];
+                if (nav) {
+                    nav.style.display = emergencyViews.includes(id) ? "none" : "flex";
+                }
+            };
+
+            window.navTo = (viewId, element) => {
+                window.showView(viewId);
+
+                // Update active icon state
+                document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                if (element) element.classList.add('active');
+
+                // Contextual data loading
+                if (viewId === 'profile') {
+                    const user = JSON.parse(localStorage.getItem("guardian_user") || "{}");
+                    const nameEl = document.getElementById("profile-name");
+                    const phoneEl = document.getElementById("profile-phone");
+                    if (nameEl) nameEl.innerText = user.name || "User";
+                    if (phoneEl) phoneEl.innerText = user.phone || "No phone added";
+                }
+            };
+
+            window.resetAndBack = () => {
+                const statusText = document.getElementById("ai-status");
+                if (statusText) {
+                    statusText.innerText = "";
+                    statusText.style.display = "none";
+                }
+
+                const mediaInput = document.getElementById("media-upload");
+                if (mediaInput) mediaInput.value = "";
+
+                const manualInput = document.getElementById("manual-input");
+                if (manualInput) manualInput.value = "";
+
+                const dispatchInfo = document.getElementById("dispatch-info");
+                if (dispatchInfo) dispatchInfo.innerText = "Drone dispatched to your GPS coordinates.";
+
+                window.showView('dashboard');
+            };
+
+            // --- 3. AUTHENTICATION ---
+            window.handleSignIn = () => {
+                const name = document.getElementById("user-name").value;
+                const phone = document.getElementById("user-phone").value;
+                if (name && phone) {
+                    localStorage.setItem("guardian_user", JSON.stringify({ name, phone }));
+                    const welcomeMsg = document.getElementById("welcome-msg");
+                    if (welcomeMsg) welcomeMsg.innerText = `Welcome, ${name}`;
+                    window.showView("dashboard");
+                    if (window.updateLocationString) window.updateLocationString();
+                } else {
+                    alert("Please enter both Name and Phone Number.");
+                }
+            };
+
+            // --- 4. INCIDENT SELECTION & TRIGGER ---
+            window.selectType = (type) => {
+                selectedIncident = type;
+                const header = document.getElementById("details-header");
+                const box = document.getElementById("options-box");
+
+                if (header) header.innerText = `${type} Details`;
+
+                if (box) {
+                    const options = CATEGORIES[type] || ["General Emergency"];
+                    box.innerHTML = options
+                        .map((opt) => `<div class="option-chip" onclick="this.classList.toggle('selected')">${opt}</div>`)
+                        .join("");
+                }
+                window.showView("details");
+            };
+
+            window.quickTrigger = () => {
+                selectedIncident = "General SOS";
+                window.generateTrigger();
+            };
+
+            window.generateTrigger = async () => {
+                const details = Array.from(document.querySelectorAll(".option-chip.selected")).map((el) => el.innerText);
+                const manual = document.getElementById("manual-input").value;
+                const user = JSON.parse(localStorage.getItem("guardian_user") || "{}");
+                const dispatchInfo = document.getElementById("dispatch-info");
+                const btn = document.querySelector("#view-details .btn-action");
+
+                if (btn) { btn.innerText = "📍 LOCATING..."; btn.disabled = true; }
+
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const { latitude: lat, longitude: lng } = position.coords;
+                    window.activeIncidentLat = lat;
+                    window.activeIncidentLng = lng;
+
+                    try {
+                        const response = await fetch(`${SERVER_URL}/sos_trigger`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ user: user.name, type: selectedIncident, lat, lng, details, manual }),
+                        });
+
+                        const data = await response.json();
+
+                        if (data.status === "SUCCESS") {
+                            if (dispatchInfo) dispatchInfo.innerText = "🚨 Incident Pinged! Awaiting your video evidence to authorize drone dispatch.";
+
+                            // Hide ETA block since it's not dispatched yet
+                            const droneIdEl = document.getElementById("status-drone-id");
+                            const distEl = document.getElementById("status-distance");
+                            const etaEl = document.getElementById("status-eta");
+                            const labelEl = document.getElementById("status-label");
+
+                            if (droneIdEl) droneIdEl.innerText = "PENDING AI AUTHORIZATION";
+                            if (distEl) distEl.innerText = "---";
+                            if (etaEl) etaEl.innerText = "---";
+                            if (labelEl) {
+                                labelEl.innerText = "AWAITING MEDIA";
+                                labelEl.style.color = "#ffb74d";
+                            }
+                        }
+                    } catch (e) {
+                        if (dispatchInfo) dispatchInfo.innerText = "Ping failed due to network error.";
+                    }
+
+                    window.showView("awareness");
+                    if (btn) { btn.innerText = "GENERATE TRIGGER 🚨"; btn.disabled = false; }
+                }, (err) => {
+                    // Fallback for demo if location fails
+                    alert("Plan B: Manual Triggering without GPS coordinates.");
+                    fetch(`${SERVER_URL}/sos_trigger`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ user: user.name, type: selectedIncident, details, manual }),
+                    }).then(() => window.showView("awareness"));
+                    if (btn) { btn.innerText = "GENERATE TRIGGER 🚨"; btn.disabled = false; }
+                });
+            };
+
+            // --- 5. EDGE AI: MEDIA PROCESSING ---
+            const setupMediaListeners = () => {
+                const mediaInput = document.getElementById("media-upload");
+                const statusText = document.getElementById("ai-status");
+
+                if (mediaInput) {
+                    mediaInput.onchange = async (event) => {
+                        const file = event.target.files[0];
+                        if (!file) return;
+
+                        const progressContainer = document.getElementById("ai-progress-container");
+                        const progressFill = document.getElementById("ai-progress-fill");
+
+                        if (statusText) {
+                            statusText.style.display = "block";
+                            statusText.style.color = "#ffb74d";
+                        }
+
+                        if (progressContainer && progressFill) {
+                            progressContainer.style.display = "block";
+                            progressFill.style.width = "0%";
+                            progressFill.style.transition = "width 0.1s linear";
+                        }
+
+                        if (file.type.startsWith("image/")) {
+                            if (statusText) statusText.innerText = "🧠 Analyzing Image Evidence...";
+                            processWithGemini(file);
+                        } else if (file.type.startsWith("video/")) {
+                            if (statusText) statusText.innerText = "⚙️ Compressing Video for AI...";
+                            compressVideoForAI(file);
+                        }
+                        mediaInput.value = "";
+                    };
+                }
+            };
+
+            async function compressVideoForAI(videoFile) {
+                const video = document.createElement("video");
+                video.src = URL.createObjectURL(videoFile);
+                video.muted = true;
+                video.playsInline = true;
+
+                video.onloadedmetadata = () => {
+                    const canvas = document.createElement("canvas");
+                    const MAX_HEIGHT = 480;
+                    let scale = MAX_HEIGHT / video.videoHeight;
+                    if (scale > 1) scale = 1;
+
+                    canvas.width = video.videoWidth * scale;
+                    canvas.height = video.videoHeight * scale;
+                    const ctx = canvas.getContext("2d");
+
+                    const stream = canvas.captureStream(30);
+                    const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp8", videoBitsPerSecond: 500000 });
+                    const chunks = [];
+
+                    recorder.ondataavailable = (e) => chunks.push(e.data);
+                    recorder.onstop = async () => {
+                        const compressedBlob = new Blob(chunks, { type: "video/webm" });
+                        const statusText = document.getElementById("ai-status");
+                        const progressFill = document.getElementById("ai-progress-fill");
+
+                        if (statusText) statusText.innerText = "🧠 Analyzing Video Evidence (Cloud AI)...";
+                        if (progressFill) {
+                            progressFill.style.transition = "width 5s ease-out"; // Fake a slow pulse for the API call wait
+                            progressFill.style.width = "95%";
+                        }
+                        processWithGemini(compressedBlob);
+                    };
+
+                    video.play();
+                    recorder.start();
+                    const drawFrame = () => {
+                        if (!video.paused && !video.ended) {
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                            // Native accurate progress binding to processing frames!
+                            const progressFill = document.getElementById("ai-progress-fill");
+                            if (progressFill && video.duration) {
+                                const pct = (video.currentTime / video.duration) * 80; // Transcode is 80% of total visual wait time
+                                progressFill.style.width = `${pct}%`;
+                            }
+
+                            requestAnimationFrame(drawFrame);
+                        }
+                    };
+                    drawFrame();
+                    video.onended = () => recorder.stop();
+                };
+            }
+
+            async function processWithGemini(mediaBlob) {
+                const statusText = document.getElementById("ai-status");
+                try {
+                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                    const base64Data = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result.split(",")[1]);
+                        reader.readAsDataURL(mediaBlob);
+                    });
+
+                    const prompt = `Analyze this emergency media. Return ONLY a raw JSON object: { "severity": <0-100>, "priority": "<CRITICAL, HIGH, NORMAL>", "description": "<Short summary>" }`;
+                    const result = await model.generateContent([prompt, { inlineData: { data: base64Data, mimeType: mediaBlob.type } }]);
+
+                    const responseText = result.response.text();
+                    const cleanJson = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+                    const analysis = JSON.parse(cleanJson);
+
+                    const statusText = document.getElementById("ai-status");
+                    const progressFill = document.getElementById("ai-progress-fill");
+                    const progressContainer = document.getElementById("ai-progress-container");
+
+                    if (statusText) {
+                        statusText.style.color = "#4ade80";
+                        statusText.innerText = `✅ Evidence Logged. Severity: ${analysis.severity}. Evaluating Dispatch Route...`;
+                    }
+                    if (progressFill) {
+                        progressFill.style.transition = "width 0.3s ease";
+                        progressFill.style.width = "100%";
+                    }
+
+                    // Give the user a brief second to see the 100% completion before moving to Status View
+                    setTimeout(async () => {
+                        if (window.activeIncidentLat) analysis.lat = window.activeIncidentLat;
+                        if (window.activeIncidentLng) analysis.lng = window.activeIncidentLng;
+
+                        await fetch(`${SERVER_URL}/report_evidence`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(analysis),
+                        });
+
+                        if (progressContainer) progressContainer.style.display = "none";
+                        window.showView("status"); // Show pending/active status view
+                    }, 1200);
+
+                } catch (error) {
+                    console.error("Gemini Error:", error);
+                    const statusText = document.getElementById("ai-status");
+                    const progressFill = document.getElementById("ai-progress-fill");
+
+                    if (statusText) {
+                        statusText.style.color = "#ff4444";
+                        statusText.innerText = "❌ AI Analysis Failed.";
+                    }
+                    if (progressFill) progressFill.style.background = "#ff4444";
+                }
+            }
+
+            // --- 6. INITIALIZATION ---
+            window.updateLocationString = () => {
+                const locSpan = document.getElementById("location-text");
+                if (!locSpan) return;
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        try {
+                            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                            const data = await res.json();
+                            const city = data.address.city || data.address.town || data.address.village || data.address.county || "UNKNOWN";
+                            const country = data.address.country_code ? data.address.country_code.toUpperCase() : "";
+                            locSpan.innerText = `📍 ${city.toUpperCase()}, ${country} • `;
+                        } catch (err) {
+                            locSpan.innerText = `📍 LAT ${latitude.toFixed(2)}, LNG ${longitude.toFixed(2)} • `;
+                        }
+                    }, () => {
+                        locSpan.innerText = `📍 LOCATION DENIED • `;
+                    });
+                }
+            };
+
+            window.onload = () => {
+                setupMediaListeners(); // Initialize file input listeners
+                const userStr = localStorage.getItem("guardian_user");
+                if (!userStr) {
+                    window.showView("signin");
+                } else {
+                    const user = JSON.parse(userStr);
+                    const welcomeMsg = document.getElementById("welcome-msg");
+                    if (welcomeMsg) welcomeMsg.innerText = `Welcome, ${user.name}`;
+                    window.showView("dashboard");
+                    window.updateLocationString();
+                }
+            };
+        </script>
+</body>
+
+</html>

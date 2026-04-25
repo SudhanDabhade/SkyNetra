@@ -11,7 +11,7 @@ const MobileDroneNode = () => {
   const [facingMode, setFacingMode] = useState('environment');
   const [mediaStream, setMediaStream] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
   // NEW: Overlay for user gesture compliance
   const [needsGesture, setNeedsGesture] = useState(true);
 
@@ -25,7 +25,7 @@ const MobileDroneNode = () => {
   // Initialize Socket & Peer Connection
   useEffect(() => {
     // FORCE HTTP to resolve Mixed Content / SSL Handshake errors
-    const serverHost = '192.168.137.1';
+    const serverHost = '10.123.104.248'
     const serverUrl = `http://${serverHost}:5001`;
     socketRef.current = io(serverUrl);
     socketRef.current.on('connect', () => console.log('Socket Connected'));
@@ -48,7 +48,7 @@ const MobileDroneNode = () => {
     peer.on('open', (id) => {
       console.log('Drone Peer registered with ID:', id);
     });
-    
+
     peer.on('disconnected', () => {
       console.warn('Drone peer disconnected. Reconnecting...');
       peer.reconnect();
@@ -77,7 +77,7 @@ const MobileDroneNode = () => {
       }
     };
     loadModel();
-    
+
     return () => {
       if (socketRef.current) socketRef.current.disconnect();
       if (peer) peer.destroy();
@@ -113,7 +113,7 @@ const MobileDroneNode = () => {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.play().catch(err => console.error("React play failed:", err));
       }
-      
+
       // 2. Vanilla JS Bypass Fallback
       const vidEl = document.getElementById('tactical-camera-feed');
       if (vidEl) {
@@ -126,14 +126,14 @@ const MobileDroneNode = () => {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: { ideal: facingMode }, 
-          width: { ideal: 1280 }, 
-          height: { ideal: 720 } 
+        video: {
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         },
         audio: false
       });
-      
+
       // Early Vanilla JS Bypass
       const vidEl = document.getElementById('tactical-camera-feed');
       if (vidEl) vidEl.srcObject = stream;
@@ -187,17 +187,17 @@ const MobileDroneNode = () => {
       const input = tf.tidy(() => {
         const img = tf.browser.fromPixels(video);
         return img.resizeBilinear([640, 640])
-                  .div(255.0)
-                  .expandDims(0);
+          .div(255.0)
+          .expandDims(0);
       });
 
       // 2. Inference
       const res = modelRef.current.execute(input);
-      
+
       // 3. Post-process (Shape: could be [1, 84, 8400] or [1, 8400, 84])
       const output = res.dataSync();
       const shape = res.shape; // e.g., [1, 84, 8400] or [1, 8400, 84]
-      
+
       let transRes;
       if (shape[1] === 84) {
         transRes = res.transpose([0, 2, 1]); // -> [1, 8400, 84]
@@ -229,7 +229,7 @@ const MobileDroneNode = () => {
 
       // 5. Draw
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       detectionIndices.forEach(idx => {
         const classId = classes.slice([idx], [1]).dataSync()[0];
         const score = scores.slice([idx], [1]).dataSync()[0];
@@ -237,7 +237,7 @@ const MobileDroneNode = () => {
         // Filter for 'person' (Class ID 0)
         if (classId === 0 && score > 0.4) {
           const box = boxes.slice([idx, 0], [1, 4]).dataSync();
-          
+
           // Map back to canvas size
           const minY = box[0] * canvas.height / 640;
           const minX = box[1] * canvas.width / 640;
@@ -289,7 +289,7 @@ const MobileDroneNode = () => {
       setIsBroadcasting(true);
 
       const call = peer.call('skynetra-hub-01', mediaStream);
-      
+
       if (!call) {
         throw new Error('Call initialization failed');
       }
@@ -337,28 +337,28 @@ const MobileDroneNode = () => {
 
   return (
     <div className="fixed inset-0 bg-transparent text-white overflow-hidden font-mono select-none flex flex-col">
-      
+
       {/* 0. START MISSION GESTURE OVERLAY */}
       {needsGesture && (
         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
-           <div className="mb-8 p-6 rounded-full bg-cyan-500/10 border-2 border-cyan-500/30 animate-pulse">
-             <Camera className="w-16 h-16 text-cyan-400" />
-           </div>
-           <h1 className="text-3xl font-black italic tracking-tighter text-white mb-4 uppercase">Initialize Uplink</h1>
-           <p className="text-cyan-400/60 text-xs mb-10 tracking-[0.2em] uppercase max-w-xs">Establishing Secure P2P Tactical Connection to Command Center...</p>
-           
-           <button 
-             onClick={handleManualStart}
-             className="px-12 py-6 bg-cyan-500 text-black text-sm font-black uppercase tracking-[0.4em] rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.4)] active:scale-95 transition-all hover:bg-cyan-400"
-           >
-             Start Mission
-           </button>
+          <div className="mb-8 p-6 rounded-full bg-cyan-500/10 border-2 border-cyan-500/30 animate-pulse">
+            <Camera className="w-16 h-16 text-cyan-400" />
+          </div>
+          <h1 className="text-3xl font-black italic tracking-tighter text-white mb-4 uppercase">Initialize Uplink</h1>
+          <p className="text-cyan-400/60 text-xs mb-10 tracking-[0.2em] uppercase max-w-xs">Establishing Secure P2P Tactical Connection to Command Center...</p>
+
+          <button
+            onClick={handleManualStart}
+            className="px-12 py-6 bg-cyan-500 text-black text-sm font-black uppercase tracking-[0.4em] rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.4)] active:scale-95 transition-all hover:bg-cyan-400"
+          >
+            Start Mission
+          </button>
         </div>
       )}
 
       {/* Edge Detection Overlay Canvas */}
-      <canvas 
-        ref={canvasRef} 
+      <canvas
+        ref={canvasRef}
         width={640}
         height={640}
         className="fixed inset-0 w-full h-full pointer-events-none z-10"
@@ -367,29 +367,29 @@ const MobileDroneNode = () => {
       {/* Main Video Viewport - NUCLEAR FIX #1: Fixed Position & Z-Index */}
       <div className="flex-grow relative bg-transparent overflow-hidden">
         {isPlaying && (
-          <video 
+          <video
             id="tactical-camera-feed"
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            muted 
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
             onLoadedMetadata={() => {
               const el = document.getElementById('tactical-camera-feed');
               el?.play().catch(console.error);
             }}
-            style={{ 
-              position: 'fixed', 
-              top: 0, 
-              left: 0, 
-              width: '100vw', 
-              height: '100vh', 
-              objectFit: 'cover', 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              objectFit: 'cover',
               zIndex: 0
             }}
             className="grayscale-[0.2] brightness-110"
           />
         )}
-        
+
         {!isPlaying && !needsGesture && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 opacity-20">
             {modelLoading ? (
@@ -413,7 +413,7 @@ const MobileDroneNode = () => {
               <Shield className="w-3.5 h-3.5 text-cyan-500" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-white/80 italic">SkyNetra Node_A1</span>
             </div>
-            
+
             <div className="flex flex-col gap-1.5 bg-black/40 border-l border-white/10 p-2 rounded-r-md">
               <div className="flex items-center gap-2">
                 <div className={`w-1.5 h-1.5 rounded-full ${modelLoading ? 'bg-slate-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_8px_#10b981]'}`} />
@@ -429,7 +429,7 @@ const MobileDroneNode = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex flex-col items-end gap-1">
             <div className="flex items-center gap-2 text-white/60">
               <Clock className="w-3.5 h-3.5" />
@@ -467,31 +467,31 @@ const MobileDroneNode = () => {
             </div>
           </div>
           <div className="bg-cyan-500/5 border-l-2 border-cyan-500 px-2 py-1">
-             <span className="text-[8px] font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
-               <Activity className="w-2.5 h-2.5" /> Bitrate: 4.2 MB/S
-             </span>
+            <span className="text-[8px] font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
+              <Activity className="w-2.5 h-2.5" /> Bitrate: 4.2 MB/S
+            </span>
           </div>
         </div>
 
         {/* NUCLEAR FIX #3: Manual Force Play Kickstart Button (only show if video doesn't play) */}
         {isPlaying && (
           <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
-             <button 
-                onClick={() => {
-                  const vid = document.getElementById('tactical-camera-feed');
-                  vid?.play().catch(console.error);
-                }}
-                className="p-3 bg-white/5 rounded-full border border-white/10 text-[8px] font-black uppercase text-white/40 tracking-widest hover:bg-white/10"
-              >
-                Force Optical Sync
-              </button>
+            <button
+              onClick={() => {
+                const vid = document.getElementById('tactical-camera-feed');
+                vid?.play().catch(console.error);
+              }}
+              className="p-3 bg-white/5 rounded-full border border-white/10 text-[8px] font-black uppercase text-white/40 tracking-widest hover:bg-white/10"
+            >
+              Force Optical Sync
+            </button>
           </div>
         )}
       </div>
 
       {/* Control Bar: Bottom Section - Ensure z-index 20 */}
       <div className="h-24 shrink-0 bg-slate-950 border-t border-white/5 px-8 flex items-center justify-between z-20">
-        <button 
+        <button
           onClick={toggleCamera}
           className="w-12 h-12 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center group active:scale-95 transition-all"
         >
@@ -504,7 +504,7 @@ const MobileDroneNode = () => {
           </div>
         </div>
 
-        <button 
+        <button
           className="w-12 h-12 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center group opacity-20 pointer-events-none"
         >
           <Camera className="w-5 h-5 text-slate-500" />
