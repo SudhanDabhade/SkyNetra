@@ -40,7 +40,8 @@ DRONE_FLEET = [
     {"id": "Swargate Drone", "name": "Swargate Station", "lat": 18.5018, "lng": 73.8636, "status": "AVAILABLE", "battery": 100, "current_severity": 0},
     {"id": "Shivaji Nagar Drone", "name": "Shivaji Nagar Station", "lat": 18.5314, "lng": 73.8446, "status": "AVAILABLE", "battery": 80, "current_severity": 0},
     {"id": "Hadapsar Drone", "name": "Hadapsar Station", "lat": 18.5089, "lng": 73.9259, "status": "AVAILABLE", "battery": 45, "current_severity": 0},
-    {"id": "Kothrud Drone", "name": "Kothrud Station", "lat": 18.5074, "lng": 73.8077, "status": "AVAILABLE", "battery": 90, "current_severity": 0}
+    {"id": "Kothrud Drone", "name": "Kothrud Station", "lat": 18.5074, "lng": 73.8077, "status": "AVAILABLE", "battery": 90, "current_severity": 0},
+    {"id": "Dehu Road Drone", "name": "Dehu Road Station", "lat": 18.6838, "lng": 73.7318, "status": "AVAILABLE", "battery": 100, "current_severity": 0}
 ]
 
 # Circular No-Fly Zones: (lat, lng, radius_km)
@@ -164,6 +165,9 @@ def handle_sos():
     sos_data = request.json
     user_lat = sos_data.get('lat')
     user_lng = sos_data.get('lng')
+
+    if user_lat is None or user_lng is None:
+        user_lat, user_lng = 18.5204, 73.8567
     incident_type = sos_data.get('type', 'GENERAL_EMERGENCY')
     manual_note = sos_data.get('description', '')
     
@@ -181,6 +185,7 @@ def handle_sos():
         sos_id = f"SOS-{int(datetime.utcnow().timestamp())}"
 
         # 1. Update Map UI with SOS Ping
+        print(f"🚀 Broadcasting SOS payload to all connected dashboards: {user_lat}, {user_lng}")
         socketio.emit('ui_pulse_location', {
             "id": sos_id,
             "lat": user_lat,

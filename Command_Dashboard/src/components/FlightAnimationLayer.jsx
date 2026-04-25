@@ -33,9 +33,9 @@ const FlightAnimationLayer = ({ mission }) => {
   if (!mission || !mission.startTime) return null;
 
   // Determine Mission Parameters
-  let targetLat = 18.5204;
-  let targetLng = 73.8567;
-  let assignedUnit = 'Swargate Drone';
+  let targetLat = 18.7643; //18.5204;
+  let targetLng = 73.6973; //73.8567;
+  let assignedUnit = 'Dehu Drone'; //'Swargate Drone'; 
 
   if (mission.lat) {
     targetLat = mission.lat;
@@ -46,7 +46,7 @@ const FlightAnimationLayer = ({ mission }) => {
     if (alert && alert.location) {
       targetLat = alert.location[0];
       targetLng = alert.location[1];
-      assignedUnit = alert.assignedUnit || 'Swargate Drone';
+      assignedUnit = alert.assignedUnit || 'Dehu Drone';
     }
   }
 
@@ -55,6 +55,7 @@ const FlightAnimationLayer = ({ mission }) => {
   if (assignedUnit.includes('Shivaji')) startPos = [18.5314, 73.8446];
   else if (assignedUnit.includes('Hadapsar')) startPos = [18.5089, 73.9259];
   else if (assignedUnit.includes('Kothrud')) startPos = [18.5074, 73.8077];
+  else if (assignedUnit.includes('Dehu')) startPos = [18.6838, 73.7318];
 
   const endPos = [targetLat, targetLng];
 

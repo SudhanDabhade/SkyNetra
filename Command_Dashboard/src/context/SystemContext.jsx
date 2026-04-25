@@ -23,7 +23,8 @@ export const SystemProvider = ({ children }) => {
       { id: 'HUB_SWAR', pos: [18.5018, 73.8636], type: 'HUB', label: 'Swargate' },
       { id: 'HUB_SHIV', pos: [18.5314, 73.8446], type: 'HUB', label: 'Shivaji Nagar' },
       { id: 'HUB_HADA', pos: [18.5089, 73.9259], type: 'HUB', label: 'Hadapsar' },
-      { id: 'HUB_KOTH', pos: [18.5074, 73.8077], type: 'HUB', label: 'Kothrud' }
+      { id: 'HUB_KOTH', pos: [18.5074, 73.8077], type: 'HUB', label: 'Kothrud' },
+      { id: 'HUB_DEHU', pos: [18.6838, 73.7318], type: 'HUB', label: 'Dehu Road' }
     ],
     paths: []
   });
@@ -92,12 +93,12 @@ export const SystemProvider = ({ children }) => {
 
       socket.on('vision_update', (data) => {
         if (data.image) {
-          const formatted = data.image.startsWith('data:image') 
-            ? data.image 
+          const formatted = data.image.startsWith('data:image')
+            ? data.image
             : `data:image/jpeg;base64,${data.image}`;
           setVideoStream(formatted);
         }
-        
+
         setTelemetry(prev => ({
           ...prev,
           cpuLoad: Math.floor(Math.random() * 5 + 82),
@@ -109,7 +110,7 @@ export const SystemProvider = ({ children }) => {
       // ── 1. The Pulse: UI Pulse Location ──
       socket.on('ui_pulse_location', (data) => {
         console.log('🔴 UI PULSE received:', data);
-        
+
         toast.error(`🚨 SOS ALERT: ${data.type} Triggered`, {
           duration: 8000,
           style: { background: '#7f1d1d', color: '#fff', border: '1px solid #ef4444' }
@@ -168,7 +169,7 @@ export const SystemProvider = ({ children }) => {
       // ── 4. The Intelligence Feed: Update Intel Brief ──
       socket.on('update_intel_brief', (data) => {
         console.log('🧠 INTEL BRIEF received:', data.report);
-        
+
         toast.success(`🧠 Intel Brief: ${data.report.priority} Priority`, {
           duration: 6000,
           style: { background: '#0891b2', color: '#fff', border: '1px solid #164e63' }
@@ -210,7 +211,7 @@ export const SystemProvider = ({ children }) => {
     const targetAlert = alertLog.find(a => a.id === alertId);
 
     // Update Alert Log Status
-    setAlertLog(prev => prev.map(a => 
+    setAlertLog(prev => prev.map(a =>
       a.id === alertId ? { ...a, status: 'EN_ROUTE', assignedUnit: droneId } : a
     ));
 
@@ -218,7 +219,7 @@ export const SystemProvider = ({ children }) => {
     if (targetAlert) {
       setMapState(prev => ({
         ...prev,
-        markers: prev.markers.map(m => 
+        markers: prev.markers.map(m =>
           m.id === 'AERO_01' ? { ...m, pos: targetAlert.location, label: `[${droneId}: EN_ROUTE]` } : m
         ),
         paths: [[[18.4600, 73.8500], targetAlert.location]]
