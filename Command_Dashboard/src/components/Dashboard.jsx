@@ -304,7 +304,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-              </div>
+              </div>  
 
               {/* New Deployment Button Removed Per User Request */}
             </div>

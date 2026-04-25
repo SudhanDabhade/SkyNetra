@@ -1,0 +1,37 @@
+import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { LayoutGrid, List, Maximize2, Settings, ChevronDown, Shield, Radio, Monitor, Activity, Battery } from 'lucide-react';
+import { SystemContext } from '../context/SystemContext';
+
+const FeedsView = () => {
+  const navigate = useNavigate();
+  const { setCurrentActiveDroneSource } = useContext(SystemContext);
+  const [viewMode, setViewMode] = useState('grid');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [activePlaybackId, setActivePlaybackId] = useState(null);
+
+  const drones = [
+    { id: 'Alpha-01', status: 'Active', battery: '88%', alt: '1,240ft', zone: 'Sector A-14' },
+    { id: 'Beta-02', status: 'Charging', battery: '12%', alt: '0ft', zone: 'Bay 4' },
+    { id: 'Gamma-03', status: 'Standby', battery: '95%', alt: '0ft', zone: 'Hangar B' },
+    { id: 'Delta-04', status: 'Active', battery: '76%', alt: '940ft', zone: 'Sector C-02' },
+    { id: 'Epsilon-05', status: 'Aimport { useNavigate } from 'react-router-dom';
+import { Lay }import { LayoutGrid, List, Maximize2, Settingsryimport { SystemContext } from '../context/SystemContext';
+
+const FeedsView = () => {
+  const navigate = useNavigate();
+  conan
+const FeedsView = () => {
+  const navigate = useNavigaty:   const navigate = useNazone: 'Sector D-04' },
+    { id: 'Io  const [viewM: 'Charging', battery: '4%', alt: '0ft', zone: 'Bay 2'  const [isProfileOpen, setIsProfileOpen] = useSta c  const [activePlaybackId, setActivePlaybackId] = useState(;
+
+  const drones = [
+    { id: 'Alpha-01', status: 'Active', batt(vi    { id: 'Alpha-ig    { id: 'Beta-02', status: 'Charging', battery: '12%', alt: '0ft', zone: 'Bay 4' },
+    { iex    { id: 'Gamma-03', status: 'Standby', battery: '95%', alt: '0ft', zone: 'Hangar Ber    { id: 'Delta-04', status: 'Active', battery: '76%', alt: '940ft', zone: 'Sector C-0      { id: 'Epsilon-05', status: 'Aimport { useNavigate } from 'react-router-dom';
+import { Lgaimport { Lay }import { LayoutGrid, List, Maximize2, Setting0" />
+            <spa
+const FeedsView = () => {
+  const navigate = useNavigate();
+  conan
+const FeedsView = () => {
+  const navigate = useN-50  const navigate = useNa
