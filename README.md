@@ -1,16 +1,24 @@
-# React + Vite
+# SkyNetra Command Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SkyNetra is a premium urban safety and emergency response coordination dashboard. It features real-time incident detection (simulated), tactical map visualization, and drone fleet management.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Tactical Overview**: Real-time fleet status and incident logs.
+- **Interactive Map**: Tactical map using Leaflet with zone monitoring.
+- **Modern UI**: Sleek, high-performance interface built with Vite, React, and Tailwind CSS 4.
+- **Drone Uplink**: Simulated live HUD for drone surveillance.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend**: React 19, Vite 8
+- **Styling**: Tailwind CSS 4, Lucide Icons
+- **Mapping**: React-Leaflet
+- **State Management**: React Context
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+npm run dev
+```
