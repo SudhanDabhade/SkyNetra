@@ -12,7 +12,8 @@ from dotenv import load_dotenv
 
 # --- 1. INITIALIZE FLASK APP ---
 app = Flask(__name__)
-CORS(app)
+# Permissive CORS for local mobile app access
+CORS(app, resources={r"/*": {"origins": "*"}})
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # --- 2. LOAD ENVIRONMENT VARIABLES ---
@@ -21,7 +22,7 @@ load_dotenv()
 # --- 3. AI CONFIGURATION ---
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
-    print("⚠️ WARNING: GEMINI_API_KEY not found in .env file!")
+    print("WARNING: GEMINI_API_KEY not found in .env file!")
     
 client = genai.Client(api_key=api_key) if api_key else None
 
@@ -40,8 +41,7 @@ DRONE_FLEET = [
     {"id": "Swargate Drone", "name": "Swargate Station", "lat": 18.5018, "lng": 73.8636, "status": "AVAILABLE", "battery": 100, "current_severity": 0},
     {"id": "Shivaji Nagar Drone", "name": "Shivaji Nagar Station", "lat": 18.5314, "lng": 73.8446, "status": "AVAILABLE", "battery": 80, "current_severity": 0},
     {"id": "Hadapsar Drone", "name": "Hadapsar Station", "lat": 18.5089, "lng": 73.9259, "status": "AVAILABLE", "battery": 45, "current_severity": 0},
-    {"id": "Kothrud Drone", "name": "Kothrud Station", "lat": 18.5074, "lng": 73.8077, "status": "AVAILABLE", "battery": 90, "current_severity": 0},
-    {"id": "Dehu Road Drone", "name": "Dehu Road Station", "lat": 18.6838, "lng": 73.7318, "status": "AVAILABLE", "battery": 100, "current_severity": 0}
+    {"id": "Kothrud Drone", "name": "Kothrud Station", "lat": 18.5074, "lng": 73.8077, "status": "AVAILABLE", "battery": 90, "current_severity": 0}
 ]
 
 # Circular No-Fly Zones: (lat, lng, radius_km)
@@ -153,11 +153,11 @@ threading.Thread(target=drone_simulation_loop, daemon=True).start()
 # --- WebSocket Events (Optional but good for debugging) ---
 @socketio.on('connect')
 def handle_connect():
-    print("✅ Dashboard connected to Python SocketIO!")
+    print("[+] Dashboard connected to Python SocketIO!")
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print("❌ Dashboard disconnected")
+    print("[-] Dashboard disconnected")
 
 # --- 6. ENDPOINT A: MOBILE APP SOS TRIGGER ---
 @app.route('/sos_trigger', methods=['POST'])
@@ -165,15 +165,12 @@ def handle_sos():
     sos_data = request.json
     user_lat = sos_data.get('lat')
     user_lng = sos_data.get('lng')
-
-    if user_lat is None or user_lng is None:
-        user_lat, user_lng = 18.5204, 73.8567
     incident_type = sos_data.get('type', 'GENERAL_EMERGENCY')
     manual_note = sos_data.get('description', '')
     
     # We do NOT dispatch drones immediately here!
     # Await Gemini video proof.
-    print(f"📡 SOS Alert received from mobile at [{user_lat}, {user_lng}] for {incident_type}. Awaiting media...")
+    print(f"[SOS] Alert received from mobile at [{user_lat}, {user_lng}] for {incident_type}. Awaiting media...")
     
     try:
         # Calculate nearest drone for dashboard suggestion
@@ -185,7 +182,6 @@ def handle_sos():
         sos_id = f"SOS-{int(datetime.utcnow().timestamp())}"
 
         # 1. Update Map UI with SOS Ping
-        print(f"🚀 Broadcasting SOS payload to all connected dashboards: {user_lat}, {user_lng}")
         socketio.emit('ui_pulse_location', {
             "id": sos_id,
             "lat": user_lat,
@@ -206,14 +202,14 @@ def handle_sos():
             "description": f"Manual Interface Trigger: {manual_note}. Awaiting media evidence for drone dispatch authorization." if manual_note else "Emergency SOS signal triggered manually. Awaiting video evidence.",
             "timestamp": datetime.utcnow().isoformat() + "Z"
         })
-        print("📡 Successfully emitted UI alerts to dashboard!")
+        print("[+] Successfully emitted UI alerts to dashboard!")
         return jsonify({
             "status": "SUCCESS", 
             "message": "SOS pulse sent. Upload video evidence for drone authorization."
         }), 200
         
     except Exception as e:
-        print(f"⚠️ Socket Emission failed: {e}")
+        print(f"[!] Socket Emission failed: {e}")
         return jsonify({"status": "ERROR", "message": str(e)}), 500
 
 
@@ -240,7 +236,7 @@ def handle_evidence():
     description = report_data.get('description', 'Evidence received from field.')
     
     print("\n" + "="*50)
-    print(f"📹 EDGE AI MEDIA ALERT RECEIVED FROM {camera_id}!")
+    print(f"[AI] EDGE AI MEDIA ALERT RECEIVED FROM {camera_id}!")
     print(f"Priority Level: {priority}")
     print(f"Severity Score: {severity_score}/100")
     print(f"AI Summary: {description}")
@@ -259,7 +255,7 @@ def handle_evidence():
     if severity_score > 50 and priority != "FINAL_SUMMARY":
         best_drone, dist = dispatch_drone(lat, lng, severity_score)
         drone_id = best_drone['id'] if best_drone else "NO DRONES AVAILABLE"
-        print(f"🚁 Confirming AI Dispatch: {drone_id} to [{lat:.4f}, {lng:.4f}]")
+        print(f"[AI] Confirming AI Dispatch: {drone_id} to [{lat:.4f}, {lng:.4f}]")
 
         # ── EMIT DIRECTLY TO DASHBOARD OVER SOCKETIO ──
         try:
@@ -304,9 +300,9 @@ def handle_evidence():
                 "timestamp": datetime.utcnow().isoformat() + "Z"
             })
             
-            print("📡 AI Dispatch events emitted to dashboard successfully!")
+            print("[+] AI Dispatch events emitted to dashboard successfully!")
         except Exception as e:
-            print(f"⚠️ Socket Emission failed: {e}")
+            print(f"[!] Socket Emission failed: {e}")
     else:
         # Final Summary or Low Severity logic
         try:
@@ -318,9 +314,9 @@ def handle_evidence():
                     "timestamp": datetime.utcnow().isoformat() + "Z"
                 }
             })
-            print("📡 Standard Intel Brief emitted to dashboard!")
+            print("[+] Standard Intel Brief emitted to dashboard!")
         except Exception as e:
-            print(f"⚠️ Socket Emission failed: {e}")
+            print(f"[!] Socket Emission failed: {e}")
 
     print("="*50 + "\n")
     
@@ -332,8 +328,8 @@ def handle_evidence():
 
 # --- 9. START SERVER ---
 if __name__ == '__main__':
-    print("\n" + "╔" + "═"*48 + "╗")
-    print("║  📡 GUARDIAN AI COMMAND CENTER — PORT 5001      ║")
-    print("║  Flask API + SocketIO + Gemini AI Active        ║")
-    print("╚" + "═"*48 + "╝\n")
-    socketio.run(app, host='0.0.0.0', port=5001, debug=True, use_reloader=False)
+    print("\n" + "="*50)
+    print("  GUARDIAN AI COMMAND CENTER - PORT 5001")
+    print("  Flask API + SocketIO + Gemini AI Active")
+    print("="*50 + "\n")
+    socketio.run(app, host='0.0.0.0', port=5001, debug=True, use_reloader=False, allow_unsafe_werkzeug=True)

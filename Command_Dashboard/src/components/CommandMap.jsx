@@ -246,7 +246,7 @@ const CommandMap = ({ mapState, isTactical = false, onDeployClick, children }) =
                       </div>
                     </div>
                     <button
-                      onClick={() => { if (onDeployClick) onDeployClick(); }}
+                      onClick={() => { if (onDeployClick) onDeployClick(marker.id, marker.pos); }}
                       className="w-full bg-red-500 hover:bg-red-400 text-white font-black text-xs py-3 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
                     >
                       🚁 DEPLOY DRONE NOW

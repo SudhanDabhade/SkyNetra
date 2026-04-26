@@ -1,0 +1,10 @@
+# AI Engine Video Inputs
+AI_Engine/video_input/
+AI_Engine/selected_frames/
+AI_Engine/*.pt
+AI_Engine/__pycache__/
+*.mp4
+
+# Environment Variables
+.env
+AI_Engine/.env

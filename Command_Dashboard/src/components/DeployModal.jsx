@@ -4,9 +4,10 @@ import { X, Search, Battery, Radio, Navigation, AlertTriangle, Shield } from 'lu
 
 const DeployModal = ({ isOpen, onClose, onDeploy, emergencyData, onStandby }) => {
   const drones = [
-    { id: 'Alpha-1', name: 'Alpha-1', dist: '0.3 km away', status: 'Ready to fly', color: 'text-emerald-500', bg: 'bg-emerald-500/20' },
-    { id: 'Beta-2', name: 'Beta-2', dist: '1.2 km away', status: 'Ready to fly', color: 'text-emerald-500', bg: 'bg-emerald-500/20' },
-    { id: 'Gamma-3', name: 'Gamma-3', dist: '4.8 km away', status: 'Charging', color: 'text-orange-500', bg: 'bg-orange-500/20' },
+    { id: 'Swargate Drone', name: 'Swargate Station', dist: '0.3 km away', status: 'Ready to fly', color: 'text-emerald-500', bg: 'bg-emerald-500/20' },
+    { id: 'Shivaji Nagar Drone', name: 'Shivaji Nagar Station', dist: '1.2 km away', status: 'Ready to fly', color: 'text-emerald-500', bg: 'bg-emerald-500/20' },
+    { id: 'Hadapsar Drone', name: 'Hadapsar Station', dist: '4.8 km away', status: 'Charging', color: 'text-orange-500', bg: 'bg-orange-500/20' },
+    { id: 'Kothrud Drone', name: 'Kothrud Station', dist: '4.8 km away', status: 'Ready to fly', color: 'text-emerald-500', bg: 'bg-emerald-500/20' },
   ];
 
   const [selectedDroneId, setSelectedDroneId] = React.useState(null);
@@ -17,14 +18,10 @@ const DeployModal = ({ isOpen, onClose, onDeploy, emergencyData, onStandby }) =>
   // Set default selection when modal opens
   React.useEffect(() => {
     if (isOpen) {
+      // If we have a suggestion, find it or default to Swargate
       setSelectedDroneId(suggestedDroneId || drones[0].id);
     }
   }, [isOpen, suggestedDroneId]);
-
-  // Find the suggested drone and move it to the top
-  const sortedDrones = isSOS
-    ? [...drones].sort((a, b) => (a.id === suggestedDroneId ? -1 : b.id === suggestedDroneId ? 1 : 0))
-    : drones;
 
   const currentSelected = drones.find(d => d.id === selectedDroneId) || drones[0];
 

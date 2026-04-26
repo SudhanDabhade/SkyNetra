@@ -630,7 +630,7 @@
                         const response = await fetch(`${SERVER_URL}/sos_trigger`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ user: user.name, type: selectedIncident, lat, lng, details, manual }),
+                            body: JSON.stringify({ user: user.name, type: selectedIncident, lat, lng, details, description: manual }),
                         });
 
                         const data = await response.json();
@@ -664,7 +664,7 @@
                     fetch(`${SERVER_URL}/sos_trigger`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ user: user.name, type: selectedIncident, details, manual }),
+                        body: JSON.stringify({ user: user.name, type: selectedIncident, details, description: manual }),
                     }).then(() => window.showView("awareness"));
                     if (btn) { btn.innerText = "GENERATE TRIGGER 🚨"; btn.disabled = false; }
                 });

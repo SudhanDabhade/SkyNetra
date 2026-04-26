@@ -24,8 +24,8 @@ const MobileDroneNode = () => {
 
   // Initialize Socket & Peer Connection
   useEffect(() => {
-    // FORCE HTTP to resolve Mixed Content / SSL Handshake errors
-    const serverHost = '10.10.9.2'
+    // DYNAMIC HOST: Automatically uses the IP from your browser URL
+    const serverHost = window.location.hostname;
     const serverUrl = `http://${serverHost}:5001`;
     socketRef.current = io(serverUrl);
     socketRef.current.on('connect', () => console.log('Socket Connected'));

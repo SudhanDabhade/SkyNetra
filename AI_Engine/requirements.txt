@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+cloudinary
+pymongo[srv]
+requests
+google-genai
+ultralytics
+opencv-python-headless

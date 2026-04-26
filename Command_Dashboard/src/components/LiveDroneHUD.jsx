@@ -147,7 +147,6 @@ const LiveDroneHUD = ({ onBack, caseId }) => {
   if (assignedUnit.includes('Shivaji')) tempStartPos = [18.5314, 73.8446];
   else if (assignedUnit.includes('Hadapsar')) tempStartPos = [18.5089, 73.9259];
   else if (assignedUnit.includes('Kothrud')) tempStartPos = [18.5074, 73.8077];
-  else if (assignedUnit.includes('Dehu')) tempStartPos = [18.6838, 73.7318];
 
   const [isAutopilot, setIsAutopilot] = useState(true);
   const [activeCamera, setActiveCamera] = useState('gimbal');

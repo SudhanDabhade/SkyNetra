@@ -23,16 +23,15 @@ export const SystemProvider = ({ children }) => {
       { id: 'HUB_SWAR', pos: [18.5018, 73.8636], type: 'HUB', label: 'Swargate' },
       { id: 'HUB_SHIV', pos: [18.5314, 73.8446], type: 'HUB', label: 'Shivaji Nagar' },
       { id: 'HUB_HADA', pos: [18.5089, 73.9259], type: 'HUB', label: 'Hadapsar' },
-      { id: 'HUB_KOTH', pos: [18.5074, 73.8077], type: 'HUB', label: 'Kothrud' },
-      { id: 'HUB_DEHU', pos: [18.6838, 73.7318], type: 'HUB', label: 'Dehu Road' }
+      { id: 'HUB_KOTH', pos: [18.5074, 73.8077], type: 'HUB', label: 'Kothrud' }
     ],
     paths: []
   });
   const [alertLog, setAlertLog] = useState([]);
   const [fleetStatus, setFleetStatus] = useState([
-    { id: 'ACTIVE', status: 'Active', count: 2, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-    { id: 'CHARGING', status: 'Charging', count: 3, color: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
-    { id: 'STANDBY', status: 'Ready', count: 4, color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' }
+    { id: 'ACTIVE', status: 'Active', count: 5, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+    { id: 'CHARGING', status: 'Charging', count: 4, color: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
+    { id: 'STANDBY', status: 'Ready', count: 3, color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' }
   ]);
   const [telemetry, setTelemetry] = useState({
     cpuLoad: 0,
@@ -79,12 +78,14 @@ export const SystemProvider = ({ children }) => {
         });
 
         setAlertLog(prev => [{
-          id: `ALERT-${Date.now()}`,
+          id: data.id || `ALERT-${Date.now()}`,
           timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false }),
           object: data.label || 'CCTV_ANOMALY',
           confidence: data.confidence || 0.92,
           type: 'CRITICAL',
           location: data.location || [18.4550, 73.8450],
+          assignedUnit: data.assignedUnit || null,
+          distance: data.distance || null,
           description: data.description || 'AI Intelligence stream pending...',
           requiresDeployment: true,
           status: 'PENDING_AUTHORITY'
@@ -93,12 +94,12 @@ export const SystemProvider = ({ children }) => {
 
       socket.on('vision_update', (data) => {
         if (data.image) {
-          const formatted = data.image.startsWith('data:image')
-            ? data.image
+          const formatted = data.image.startsWith('data:image') 
+            ? data.image 
             : `data:image/jpeg;base64,${data.image}`;
           setVideoStream(formatted);
         }
-
+        
         setTelemetry(prev => ({
           ...prev,
           cpuLoad: Math.floor(Math.random() * 5 + 82),
@@ -110,13 +111,13 @@ export const SystemProvider = ({ children }) => {
       // ── 1. The Pulse: UI Pulse Location ──
       socket.on('ui_pulse_location', (data) => {
         console.log('🔴 UI PULSE received:', data);
-
+        
         toast.error(`🚨 SOS ALERT: ${data.type} Triggered`, {
           duration: 8000,
           style: { background: '#7f1d1d', color: '#fff', border: '1px solid #ef4444' }
         });
 
-        const sosMarkerId = `SOS_${Date.now()}`;
+        const sosMarkerId = data.id || `SOS_${Date.now()}`;
         setMapState(prev => ({
           ...prev,
           markers: [
@@ -169,7 +170,7 @@ export const SystemProvider = ({ children }) => {
       // ── 4. The Intelligence Feed: Update Intel Brief ──
       socket.on('update_intel_brief', (data) => {
         console.log('🧠 INTEL BRIEF received:', data.report);
-
+        
         toast.success(`🧠 Intel Brief: ${data.report.priority} Priority`, {
           duration: 6000,
           style: { background: '#0891b2', color: '#fff', border: '1px solid #164e63' }
@@ -184,7 +185,6 @@ export const SystemProvider = ({ children }) => {
       });
 
       // ── 5. Real-Time Fleet Telemetry Sync ──
-      /*
       socket.on('fleet_update', (data) => {
         setFleetStatus([
           { id: 'ACTIVE', status: 'Active', count: data.active, color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
@@ -192,7 +192,6 @@ export const SystemProvider = ({ children }) => {
           { id: 'STANDBY', status: 'Ready', count: data.ready, color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' }
         ]);
       });
-      */
 
       return () => {
         socket.off('connect');
@@ -202,27 +201,32 @@ export const SystemProvider = ({ children }) => {
         socket.off('ui_pulse_location');
         socket.off('trigger_deploy_prompt');
         socket.off('update_intel_brief');
-        // socket.off('fleet_update');
+        socket.off('fleet_update');
       };
     }
   }, [socket]);
 
-  const deployDrone = (alertId, droneId = 'Alpha-1') => {
+  const deployDrone = (alertId, droneId = 'Swargate Drone') => {
     const targetAlert = alertLog.find(a => a.id === alertId);
 
     // Update Alert Log Status
-    setAlertLog(prev => prev.map(a =>
+    setAlertLog(prev => prev.map(a => 
       a.id === alertId ? { ...a, status: 'EN_ROUTE', assignedUnit: droneId } : a
     ));
 
     // Update Map
     if (targetAlert) {
+      let stationPos = [18.5018, 73.8636]; // Default Swargate
+      if (droneId.includes('Shivaji')) stationPos = [18.5314, 73.8446];
+      else if (droneId.includes('Hadapsar')) stationPos = [18.5089, 73.9259];
+      else if (droneId.includes('Kothrud')) stationPos = [18.5074, 73.8077];
+
       setMapState(prev => ({
         ...prev,
-        markers: prev.markers.map(m =>
+        markers: prev.markers.map(m => 
           m.id === 'AERO_01' ? { ...m, pos: targetAlert.location, label: `[${droneId}: EN_ROUTE]` } : m
         ),
-        paths: [[[18.4600, 73.8500], targetAlert.location]]
+        paths: [[stationPos, targetAlert.location]]
       }));
     }
 
