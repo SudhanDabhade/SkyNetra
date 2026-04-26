@@ -364,7 +364,7 @@ Respond ONLY with a valid JSON object — no markdown, no explanation:
 
             try:
                 response = gemini_client.models.generate_content(
-                    model    = "gemini-1.5-flash",
+                    model    = "gemini-2.5-flash",
                     contents = content_parts,
                     config   = types.GenerateContentConfig(
                         response_mime_type = "application/json"

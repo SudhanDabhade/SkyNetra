@@ -60,6 +60,40 @@ const FlightAnimationLayer = ({ mission }) => {
 
   // Route Generation Strategy
   const { outbound, inbound } = useMemo(() => {
+    // If A* path is provided from backend, use it
+    if (mission.path && mission.path.length > 1) {
+      const astarOutbound = mission.path;
+      const astarInbound = [...mission.path].reverse();
+      
+      // Interpolate to 200 points for consistent animation speed if needed
+      // or just use as is if we adjust the progress indexing.
+      // For simplicity, we'll keep the 200-step logic.
+      const interpolate = (path, steps = 200) => {
+        const interpolated = [];
+        for (let i = 0; i < steps; i++) {
+          const t = i / (steps - 1);
+          const idx = t * (path.length - 1);
+          const i0 = Math.floor(idx);
+          const i1 = Math.ceil(idx);
+          const f = idx - i0;
+          
+          const p0 = path[i0];
+          const p1 = path[i1];
+          
+          interpolated.push([
+            p0[0] + f * (p1[0] - p0[0]),
+            p0[1] + f * (p1[1] - p0[1])
+          ]);
+        }
+        return interpolated;
+      };
+
+      return {
+        outbound: interpolate(astarOutbound),
+        inbound: interpolate(astarInbound)
+      };
+    }
+
     const s = startPos;
     const e = endPos;
     const nfzCenter = [18.524344, 73.800499];
@@ -116,7 +150,7 @@ const FlightAnimationLayer = ({ mission }) => {
       outbound: generateSafePath(s, e),
       inbound: generateSafePath(e, s)
     };
-  }, [startPos[0], startPos[1], endPos[0], endPos[1]]);
+  }, [startPos[0], startPos[1], endPos[0], endPos[1], mission.path]);
 
   // Physics State
   const [currentPos, setCurrentPos] = useState(startPos);

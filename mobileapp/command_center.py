@@ -9,6 +9,7 @@ from flask_cors import CORS
 from flask_socketio import SocketIO
 from google import genai
 from dotenv import load_dotenv
+from path_planner import compute_drone_path
 
 # --- 1. INITIALIZE FLASK APP ---
 app = Flask(__name__)
@@ -107,10 +108,27 @@ def get_nearest_drone(user_lat, user_lng):
 def dispatch_drone(user_lat, user_lng, incoming_severity):
     best_drone, dist = get_nearest_drone(user_lat, user_lng)
                 
+    path = []
     if best_drone:
         best_drone['status'] = 'DISPATCHED'
         best_drone['current_severity'] = incoming_severity
-    return best_drone, dist
+        
+        # Calculate A* Path
+        try:
+            # We use a smaller radius for No-Fly Zones in Python (meters)
+            # The UI uses 1.2km, so we use 1200m here.
+            nfz_list = [
+                {"lat": z['lat'], "lng": z['lng'], "radius": z['radius']} 
+                for z in CIRCULAR_NO_FLY_ZONES
+            ]
+            path = compute_drone_path(best_drone['lat'], best_drone['lng'], user_lat, user_lng, nfz_list)
+            print(f"[A*] Path calculated with {len(path)} waypoints.")
+        except Exception as e:
+            print(f"[!] A* Pathfinding failed: {e}")
+            # Fallback to straight line if A* fails
+            path = [(best_drone['lat'], best_drone['lng']), (user_lat, user_lng)]
+
+    return best_drone, dist, path
 
 # Drone background simulation thread
 def drone_simulation_loop():
@@ -253,7 +271,7 @@ def handle_evidence():
     
     # AI trigger condition: user requested dispatch even if severity is just above 50
     if severity_score > 50 and priority != "FINAL_SUMMARY":
-        best_drone, dist = dispatch_drone(lat, lng, severity_score)
+        best_drone, dist, path = dispatch_drone(lat, lng, severity_score)
         drone_id = best_drone['id'] if best_drone else "NO DRONES AVAILABLE"
         print(f"[AI] Confirming AI Dispatch: {drone_id} to [{lat:.4f}, {lng:.4f}]")
 
@@ -287,7 +305,8 @@ def handle_evidence():
                 "lat": lat,
                 "lng": lng,
                 "type": incident_type,
-                "user": camera_id
+                "user": camera_id,
+                "path": path # SENDING A* PATH
             })
             
             # 4. Push to Active Service Calls log

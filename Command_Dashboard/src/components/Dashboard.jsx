@@ -40,14 +40,15 @@ const Dashboard = () => {
       // Priority: 1. Manual selection coords, 2. Alert Log coords, 3. Fallback
       const lat = pendingAlertCoords?.[0] || alert?.location?.[0];
       const lng = pendingAlertCoords?.[1] || alert?.location?.[1];
-      
+
       return {
         droneId: alert?.assignedUnit,
         distance: alert?.distance,
         lat: lat,
         lng: lng,
         type: alert?.object || 'SOS ALERT',
-        user: 'Tactical System'
+        user: 'Tactical System',
+        path: alert?.path || sosEmergency?.path || []
       };
     }
     return null;
@@ -97,6 +98,7 @@ const Dashboard = () => {
           lat: sosEmergency.lat,
           lng: sosEmergency.lng,
           droneId: sosEmergency.droneId,
+          path: sosEmergency.path,
           startTime: Date.now()
         };
         setActiveMission(newM.id);
@@ -122,7 +124,7 @@ const Dashboard = () => {
 
     // DYNAMIC HOST: Laptop uses localhost/192.168.137.1, Phone uses 192.168.137.1
     const serverHost = window.location.hostname;
-    
+
     // Assign global reconnect for HUD button
     window.reconnectHub = initPeer;
 
@@ -154,11 +156,11 @@ const Dashboard = () => {
 
       peer.on('error', (err) => {
         if (err.type === 'unavailable-id') {
-           console.error('❌ Hub ID skynetra-hub-01 is BUSY (another tab is likely open).');
-           setPeerStatus('BUSY');
+          console.error('❌ Hub ID skynetra-hub-01 is BUSY (another tab is likely open).');
+          setPeerStatus('BUSY');
         } else {
-           console.error('❌ Hub PeerJS Error:', err.type, err);
-           setPeerStatus('ERROR');
+          console.error('❌ Hub PeerJS Error:', err.type, err);
+          setPeerStatus('ERROR');
         }
       });
 
@@ -166,9 +168,9 @@ const Dashboard = () => {
         console.log('⚠️ Incoming Tactical Feed Detected...');
         setActiveView('drone');
         setActiveMission('MOBILE_FEED');
-        
+
         call.answer();
-        
+
         call.on('stream', (remoteStream) => {
           console.log('✅ Tactical stream attached!');
           setUplinkStream(remoteStream);
@@ -192,7 +194,7 @@ const Dashboard = () => {
     };
   }, []);
 
-  const handleDeploy = (caseId, droneId = 'SN_DRONE01', lat, lng) => {
+  const handleDeploy = (caseId, droneId = 'SN_DRONE01', lat, lng, path = []) => {
     // Update drone target in system context if needed
     deployDrone(caseId, droneId);
 
@@ -203,6 +205,7 @@ const Dashboard = () => {
       droneId: droneId,
       lat: lat,
       lng: lng,
+      path: path,
       startTime: Date.now()
     }]);
     // Don't auto-jump! Watch it on dashboard map
@@ -216,23 +219,24 @@ const Dashboard = () => {
   // Handle SOS deploy confirmation
   const handleSOSDeploy = (droneId) => {
     setIsDeployModalOpen(false);
-    
+
     const lat = effectiveEmergencyData?.lat;
     const lng = effectiveEmergencyData?.lng;
+    const path = effectiveEmergencyData?.path;
 
     if (sosEmergency) {
       // Deploy the first pending alert
       const firstPending = alertLog.find(a => a.status === 'PENDING_AUTHORITY');
       if (firstPending) {
-        handleDeploy(firstPending.id, droneId, lat, lng);
+        handleDeploy(firstPending.id, droneId, lat, lng, path);
       } else {
-        handleDeploy('SOS_MISSION', droneId, lat, lng);
+        handleDeploy('SOS_MISSION', droneId, lat, lng, path);
       }
     } else if (pendingAlertId) {
-      handleDeploy(pendingAlertId, droneId, lat, lng);
+      handleDeploy(pendingAlertId, droneId, lat, lng, path);
       setPendingAlertId(null);
     } else {
-      handleDeploy('MANUAL_MISSION', droneId, lat, lng);
+      handleDeploy('MANUAL_MISSION', droneId, lat, lng, path);
     }
     setSosEmergency(null);
   };

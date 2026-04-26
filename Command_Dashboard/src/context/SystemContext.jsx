@@ -88,7 +88,8 @@ export const SystemProvider = ({ children }) => {
           distance: data.distance || null,
           description: data.description || 'AI Intelligence stream pending...',
           requiresDeployment: true,
-          status: 'PENDING_AUTHORITY'
+          status: 'PENDING_AUTHORITY',
+          path: data.path || []
         }, ...prev].slice(0, 50));
       });
 
@@ -163,6 +164,7 @@ export const SystemProvider = ({ children }) => {
           lng: data.lng,
           type: data.type,
           user: data.user,
+          path: data.path || [],
           timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false })
         });
       });
